@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPulse Pro - Enterprise Carbon Footprint Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300">
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-brand-500 text-white rounded-xl shadow-md">
+          <i class="fa-solid fa-leaf text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-brand-600 to-emerald-400 bg-clip-text text-transparent">
+            EcoPulse Pro
+          </h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Carbon Intelligence & Offset Analytics</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- SDG Badges -->
+        <div class="hidden md:flex gap-2">
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+            SDG 12: Responsible Consumption
+          </span>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+            SDG 13: Climate Action
+          </span>
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition">
+          <i class="fa-solid fa-moon dark:hidden"></i>
+          <i class="fa-solid fa-sun hidden dark:block"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="printableArea">
+    
+    <!-- Hero Banner -->
+    <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-brand-900 via-slate-800 to-slate-900 text-white shadow-xl relative overflow-hidden no-print">
+      <div class="relative z-10 max-w-2xl">
+        <span class="px-3 py-1 bg-brand-500/20 text-brand-300 border border-brand-500/30 rounded-full text-xs font-semibold uppercase tracking-wider">ISO 14001 & EPA Framework Aligned</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold mt-2">Quantify, Compare & Offset Your Environmental Footprint</h2>
+        <p class="text-gray-300 text-sm mt-2">Comprehensive calculation across home energy, transport, food, shopping, and waste vectors with real-time tree offset equivalencies.</p>
+      </div>
+      <i class="fa-solid fa-tree-city absolute right-[-20px] bottom-[-40px] text-9xl opacity-10 pointer-events-none"></i>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Input Panel (Left 7 Columns) -->
+      <div class="lg:col-span-7 space-y-6 no-print">
+        
+        <!-- Category Navigation Tabs -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-1.5 shadow-sm border border-gray-200 dark:border-slate-700 flex gap-1 overflow-x-auto">
+          <button onclick="switchTab('energy')" id="tab-energy" class="tab-btn active-tab flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-bolt"></i> Energy
+          </button>
+          <button onclick="switchTab('transport')" id="tab-transport" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+            <i class="fa-solid fa-car"></i> Transport
+          </button>
+          <button onclick="switchTab('food')" id="tab-food" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+            <i class="fa-solid fa-utensils"></i> Food
+          </button>
+          <button onclick="switchTab('shopping')" id="tab-shopping" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+            <i class="fa-solid fa-bag-shopping"></i> Shopping
+          </button>
+          <button onclick="switchTab('waste')" id="tab-waste" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+            <i class="fa-solid fa-trash-can"></i> Waste
+          </button>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
+          
+          <!-- Localization & Household Settings -->
+          <div class="mb-6 pb-6 border-b border-gray-100 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Region Grid Factor</label>
+              <select id="gridFactor" onchange="recalculate()" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="0.82">Coal Dominant (e.g., India/South Africa) - 0.82 kg/kWh</option>
+                <option value="0.38" selected>Mixed Grid (e.g., USA/Global Avg) - 0.38 kg/kWh</option>
+                <option value="0.25">High Renewable (e.g., EU Avg) - 0.25 kg/kWh</option>
+                <option value="0.02">Hydro/Nuclear (e.g., Norway/Iceland) - 0.02 kg/kWh</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Household Size</label>
+              <input type="number" id="householdSize" min="1" value="1" oninput="recalculate()" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+            </div>
+          </div>
+
+          <form id="footprintForm" oninput="recalculate()">
+            
+            <!-- SECTION 1: ENERGY -->
+            <div id="section-energy" class="tab-content space-y-4">
+              <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 border-l-4 border-brand-500 pl-3">Home Utilities & Fuels</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Electricity (kWh/month)</label>
+                  <input type="number" id="electricity" placeholder="e.g. 250" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Natural Gas ($ or Therms/month)</label>
+                  <input type="number" id="naturalGas" placeholder="e.g. 40" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold mb-1">LPG Gas (Cylinders 14.2kg/mo)</label>
+                  <input type="number" id="lpg" placeholder="e.g. 1" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Heating Oil (Liters/month)</label>
+                  <input type="number" id="heatingOil" placeholder="e.g. 0" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl cursor-pointer">
+                  <input type="checkbox" id="solarPanel" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                  <span class="text-sm font-medium">Rooftop Solar Installed (Offsets 60% Electricity Carbon)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- SECTION 2: TRANSPORT -->
+            <div id="section-transport" class="tab-content hidden space-y-4">
+              <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 border-l-4 border-brand-500 pl-3">Mobility & Flights</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Weekly Vehicle Travel (km)</label>
+                  <input type="number" id="carKm" placeholder="e.g. 120" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Vehicle Powertrain Type</label>
+                  <select id="fuelType" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    <option value="0.192">Petrol Passenger Car</option>
+                    <option value="0.171">Diesel Car</option>
+                    <option value="0.105">Hybrid Vehicle</option>
+                    <option value="0.053">Electric Vehicle (EV)</option>
+                    <option value="0.035">Motorbike / Scooter</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Public Transit (Bus/Train km/wk)</label>
+                  <input type="number" id="publicTransit" placeholder="e.g. 50" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Short Flights (&lt; 3 hrs / year)</label>
+                  <input type="number" id="shortFlights" placeholder="e.g. 2" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold mb-1">Long Flights (&gt; 3 hrs / year)</label>
+                <input type="number" id="longFlights" placeholder="e.g. 1" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+            </div>
+
+            <!-- SECTION 3: FOOD & DIET -->
+            <div id="section-food" class="tab-content hidden space-y-4">
+              <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 border-l-4 border-brand-500 pl-3">Dietary Habits</h3>
+              
+              <div>
+                <label class="block text-xs font-semibold mb-1">Primary Diet Profile</label>
+                <select id="dietType" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                  <option value="3300">High Meat (Daily beef/lamb - ~3.3 tCO2e/yr)</option>
+                  <option value="2500" selected>Medium Meat (Daily poultry/pork - ~2.5 tCO2e/yr)</option>
+                  <option value="1900">Pescatarian (Fish & Vegetarian - ~1.9 tCO2e/yr)</option>
+                  <option value="1500">Vegetarian (Dairy inclusive - ~1.5 tCO2e/yr)</option>
+                  <option value="1100">Vegan (100% Plant based - ~1.1 tCO2e/yr)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold mb-1">Food Waste Discard Level</label>
+                <select id="foodWaste" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                  <option value="1.0">Low (Seldom throw away food)</option>
+                  <option value="1.15">Moderate (Occasional leftover waste - +15%)</option>
+                  <option value="1.3">High (Frequent spoiled food discard - +30%)</option>
+                </select>
+              </div>
+
+              <div class="pt-2">
+                <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl cursor-pointer">
+                  <input type="checkbox" id="localFood" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                  <span class="text-sm font-medium">Locally Sourced Organic Produce (-10% Diet Footprint)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- SECTION 4: SHOPPING & SECONDARY -->
+            <div id="section-shopping" class="tab-content hidden space-y-4">
+              <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 border-l-4 border-brand-500 pl-3">Goods & Consumer Purchases</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Clothing & Apparel ($/month)</label>
+                  <input type="number" id="clothingSpend" placeholder="e.g. 50" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1">Electronics & Gadgets ($/year)</label>
+                  <input type="number" id="electronicsSpend" placeholder="e.g. 500" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold mb-1">General Consumption Profile</label>
+                <select id="consumptionLevel" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                  <option value="300">Minimalist (Buy second-hand, minimal packaging)</option>
+                  <option value="600" selected>Average Consumer (Standard purchasing habits)</option>
+                  <option value="1200">High Consumer (Frequent new luxury/goods purchases)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SECTION 5: WASTE & RECYCLING -->
+            <div id="section-waste" class="tab-content hidden space-y-4">
+              <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 border-l-4 border-brand-500 pl-3">Waste & Circular Economy</h3>
+              
+              <div>
+                <label class="block text-xs font-semibold mb-1">Weekly Solid Waste Output</label>
+                <select id="wasteVolume" class="w-full p-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                  <option value="300">Small Trash Bag (~300 kg/yr)</option>
+                  <option value="600" selected>Medium Trash Bin (~600 kg/yr)</option>
+                  <option value="1000">Large Household Waste (~1000 kg/yr)</option>
+                </select>
+              </div>
+
+              <div class="space-y-2 pt-2">
+                <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl cursor-pointer">
+                  <input type="checkbox" id="recyclePaper" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                  <span class="text-sm font-medium">Actively Recycle Paper & Plastic (-70 kg CO2/yr)</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl cursor-pointer">
+                  <input type="checkbox" id="compost" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                  <span class="text-sm font-medium">Home Organic Composting (-50 kg CO2/yr)</span>
+                </label>
+              </div>
+            </div>
+
+          </form>
+
+          <!-- Interactive Carbon Savings Simulator / Pledge Slider -->
+          <div class="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders"></i> Reduction Goal Simulator
+              </label>
+              <span id="reductionPledgeLabel" class="text-xs font-extrabold px-2 py-0.5 bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-300 rounded-md">0% Reduction Target</span>
+            </div>
+            <input type="range" id="reductionPledge" min="0" max="50" step="5" value="0" oninput="recalculate()" class="w-full accent-brand-600 cursor-pointer">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Simulate actionable lifestyle reductions to see immediate CO₂ and tree savings.</p>
+          </div>
+
+          <!-- Reset / Save Controls -->
+          <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex justify-between items-center text-xs">
+            <button onclick="resetData()" class="text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+            </button>
+            <span id="saveStatus" class="text-gray-400">Auto-saved to browser storage</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Analytics Dashboard (Right 5 Columns) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Main KPI Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700 text-center relative overflow-hidden">
+          
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Annual Individual Emission Density</h3>
+          
+          <div class="flex items-baseline justify-center gap-2 my-2">
+            <span id="totalTons" class="text-5xl font-black text-brand-600 dark:text-brand-500">0.00</span>
+            <span class="text-gray-500 font-bold">tCO₂e / year</span>
+          </div>
+
+          <!-- Dynamic Impact Badge -->
+          <div id="badgeContainer" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-4">
+            <!-- Injected via JS -->
+          </div>
+
+          <!-- Progress Bar relative to Paris Target (2.0 Tons) -->
+          <div class="space-y-1 text-left">
+            <div class="flex justify-between text-xs font-semibold text-gray-500">
+              <span>Paris Target (2.0t)</span>
+              <span id="targetPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+              <div id="progressBar" class="bg-brand-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tree Offset & Real-world Equivalencies Card -->
+        <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white rounded-2xl p-6 shadow-lg border border-emerald-800/50 space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-tree text-emerald-400 text-base"></i> Real-World Offset Equivalencies
+          </h4>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+              <i class="fa-solid fa-tree text-brand-400 text-xl mb-1"></i>
+              <div id="treesNeeded" class="text-xl font-bold text-white">0</div>
+              <div class="text-[10px] text-gray-300">Trees Needed to Offset / Yr</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+              <i class="fa-solid fa-road text-amber-400 text-xl mb-1"></i>
+              <div id="milesDriven" class="text-xl font-bold text-white">0</div>
+              <div class="text-[10px] text-gray-300">Gas Miles Driven</div>
+            </div>
+            <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+              <i class="fa-solid fa-mobile-screen text-blue-400 text-xl mb-1"></i>
+              <div id="smartphonesCharged" class="text-xl font-bold text-white">0</div>
+              <div class="text-[10px] text-gray-300">Phones Charged (k)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Container -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700 space-y-6">
+          <div>
+            <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-brand-500"></i> Category Emission Breakdown
+            </h4>
+            <div class="relative max-w-[240px] mx-auto">
+              <canvas id="breakdownChart"></canvas>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 dark:border-slate-700">
+            <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-chart-simple text-blue-500"></i> Benchmark Comparison
+            </h4>
+            <div class="h-[180px]">
+              <canvas id="benchmarkChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actionable Guidance & PDF Print -->
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl p-6 shadow-sm border border-emerald-200 dark:border-slate-700 no-print">
+          <h4 class="text-sm font-bold text-emerald-900 dark:text-emerald-400 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i> ISO 14001 Targeted Action Plan
+          </h4>
+          <p id="recommendationText" class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            Enter your parameters to generate custom reduction targets.
+          </p>
+
+          <button onclick="window.print()" class="mt-4 w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-md">
+            <i class="fa-solid fa-file-pdf"></i> Export Technical Appendix Report
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-slate-800 mt-12 no-print">
+    <p>© 2026 EcoPulse Intelligence Systems | Technical Sustainability Report Module</p>
+  </footer>
+
+  <!-- Script Logic -->
+  <script>
+    let breakdownChart = null;
+    let benchmarkChart = null;
+
+    // Theme Toggle Logic
+    const themeToggleBtn = document.getElementById('themeToggle');
+    themeToggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // Tab Navigation Logic
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-brand-600', 'dark:text-brand-400');
+        btn.classList.add('text-gray-500', 'dark:text-gray-400');
+      });
+
+      document.getElementById(`section-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      activeBtn.classList.add('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-brand-600', 'dark:text-brand-400');
+      activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+    }
+
+    // Calculation Engine
+    function recalculate() {
+      // 1. Energy Calculation
+      const gridFactor = parseFloat(document.getElementById('gridFactor').value);
+      const hSize = Math.max(1, parseInt(document.getElementById('householdSize').value) || 1);
+      const elec = (parseFloat(document.getElementById('electricity').value) || 0) * 12;
+      const gas = (parseFloat(document.getElementById('naturalGas').value) || 0) * 12 * 5.3; // ~5.3 kg per unit
+      const lpg = (parseFloat(document.getElementById('lpg').value) || 0) * 12 * 42.5; // 42.5 kg per cylinder
+      const oil = (parseFloat(document.getElementById('heatingOil').value) || 0) * 12 * 2.7; // 2.7 kg/L
+      const solarMultiplier = document.getElementById('solarPanel').checked ? 0.4 : 1.0;
+
+      let energyKg = ((elec * gridFactor * solarMultiplier) + gas + lpg + oil) / hSize;
+
+      // 2. Transport Calculation
+      const carKm = (parseFloat(document.getElementById('carKm').value) || 0) * 52;
+      const fuelFactor = parseFloat(document.getElementById('fuelType').value);
+      const transitKm = (parseFloat(document.getElementById('publicTransit').value) || 0) * 52;
+      const shortFlights = parseFloat(document.getElementById('shortFlights').value) || 0;
+      const longFlights = parseFloat(document.getElementById('longFlights').value) || 0;
+
+      let transportKg = (carKm * fuelFactor) + (transitKm * 0.035) + (shortFlights * 150) + (longFlights * 600);
+
+      // 3. Food Calculation
+      const dietBase = parseFloat(document.getElementById('dietType').value);
+      const wasteMultiplier = parseFloat(document.getElementById('foodWaste').value);
+      const localMultiplier = document.getElementById('localFood').checked ? 0.9 : 1.0;
+
+      let foodKg = dietBase * wasteMultiplier * localMultiplier;
+
+      // 4. Shopping & Secondary
+      const clothing = (parseFloat(document.getElementById('clothingSpend').value) || 0) * 12 * 0.5; // ~$0.5 kg CO2/$
+      const electronics = (parseFloat(document.getElementById('electronicsSpend').value) || 0) * 0.7; // ~$0.7 kg CO2/$
+      const consumptionBase = parseFloat(document.getElementById('consumptionLevel').value);
+
+      let shoppingKg = clothing + electronics + consumptionBase;
+
+      // 5. Waste Calculation
+      const wasteBase = parseFloat(document.getElementById('wasteVolume').value);
+      const recycleDeduction = document.getElementById('recyclePaper').checked ? 70 : 0;
+      const compostDeduction = document.getElementById('compost').checked ? 50 : 0;
+
+      let wasteKg = Math.max(0, wasteBase - recycleDeduction - compostDeduction);
+
+      // Raw Subtotal (kg)
+      let rawTotalKg = energyKg + transportKg + foodKg + shoppingKg + wasteKg;
+
+      // Apply Reduction Pledge Target
+      const pledgePercent = parseInt(document.getElementById('reductionPledge').value) || 0;
+      document.getElementById('reductionPledgeLabel').innerText = `${pledgePercent}% Reduction Target`;
+
+      let finalTotalKg = rawTotalKg * (1 - (pledgePercent / 100));
+      let finalTotalTons = (finalTotalKg / 1000).toFixed(2);
+
+      // UI Displays
+      document.getElementById('totalTons').innerText = finalTotalTons;
+
+      updateBadgeAndProgress(finalTotalTons);
+      updateEquivalencies(finalTotalKg);
+      updateCharts(energyKg/1000, transportKg/1000, foodKg/1000, shoppingKg/1000, wasteKg/1000, finalTotalTons);
+      generateRecommendations(energyKg, transportKg, foodKg, shoppingKg, wasteKg);
+
+      saveFormState();
+    }
+
+    function updateBadgeAndProgress(tons) {
+      const badge = document.getElementById('badgeContainer');
+      const progressBar = document.getElementById('progressBar');
+      const targetPercent = document.getElementById('targetPercent');
+
+      const percentOfTarget = Math.min(100, Math.round((tons / 2.0) * 100));
+      targetPercent.innerText = `${percentOfTarget}%`;
+      progressBar.style.width = `${Math.min(100, (tons / 10.0) * 100)}%`;
+
+      if (tons <= 2.0) {
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300";
+        badge.innerHTML = '<i class="fa-solid fa-award"></i> Low Impact (Climate Hero)';
+        progressBar.className = "bg-emerald-500 h-2.5 rounded-full transition-all duration-500";
+      } else if (tons <= 4.7) {
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300";
+        badge.innerHTML = '<i class="fa-solid fa-check"></i> Moderate Impact (Global Avg)';
+        progressBar.className = "bg-blue-500 h-2.5 rounded-full transition-all duration-500";
+      } else {
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300";
+        badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> High Carbon Density';
+        progressBar.className = "bg-rose-500 h-2.5 rounded-full transition-all duration-500";
+      }
+    }
+
+    function updateEquivalencies(totalKg) {
+      // 1 Tree absorbs approx 21.77 kg CO2 / year
+      const trees = Math.round(totalKg / 21.77);
+      // Average passenger car produces 0.404 kg CO2 per mile
+      const miles = Math.round(totalKg / 0.404);
+      // 1 Smartphone charge = 0.00822 kg CO2 -> in thousands
+      const phones = (totalKg / 8.22).toFixed(1);
+
+      document.getElementById('treesNeeded').innerText = trees.toLocaleString();
+      document.getElementById('milesDriven').innerText = miles.toLocaleString();
+      document.getElementById('smartphonesCharged').innerText = phones.toLocaleString();
+    }
+
+    function updateCharts(energy, transport, food, shopping, waste, userTotal) {
+      // Category Breakdown Chart
+      const ctxBreakdown = document.getElementById('breakdownChart').getContext('2d');
+      if (breakdownChart) breakdownChart.destroy();
+
+      breakdownChart = new Chart(ctxBreakdown, {
+        type: 'doughnut',
+        data: {
+          labels: ['Energy', 'Transport', 'Food', 'Shopping', 'Waste'],
+          datasets: [{
+            data: [energy, transport, food, shopping, waste],
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#a855f7', '#f59e0b'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+          cutout: '68%',
+          responsive: true
+        }
+      });
+
+      // Benchmark Chart
+      const ctxBenchmark = document.getElementById('benchmarkChart').getContext('2d');
+      if (benchmarkChart) benchmarkChart.destroy();
+
+      benchmarkChart = new Chart(ctxBenchmark, {
+        type: 'bar',
+        data: {
+          labels: ['You', 'Global Avg', 'US Avg', 'Target'],
+          datasets: [{
+            label: 'tCO2e / Year',
+            data: [userTotal, 4.7, 14.5, 2.0],
+            backgroundColor: ['#16a34a', '#94a3b8', '#94a3b8', '#0284c7'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function generateRecommendations(energy, transport, food, shopping, waste) {
+      const rec = document.getElementById('recommendationText');
+      let highest = Math.max(energy, transport, food, shopping, waste);
+
+      if (highest === energy) {
+        rec.innerText = "Home utilities represent your highest footprint vector. Priority: Switch lighting to LED, optimize HVAC thermostat settings by 2°C, and explore community or rooftop solar installations.";
+      } else if (highest === transport) {
+        rec.innerText = "Mobility dominates your emissions profile. Priority: Shift 2-3 weekly short trips to public transit or cycling, and consolidate air travel where possible.";
+      } else if (highest === food) {
+        rec.innerText = "Dietary habits form your main carbon driver. Priority: Incorporate 2 plant-based days weekly and prioritize local produce to cut supply-chain transport emissions.";
+      } else if (highest === shopping) {
+        rec.innerText = "Consumer goods purchasing drives significant secondary carbon footprint. Priority: Opt for durable, modular electronics and buy clothing second-hand.";
+      } else {
+        rec.innerText = "Solid waste generation is your dominant factor. Priority: Expand organic composting and practice rigorous multi-material recycling to divert landfill waste.";
+      }
+    }
+
+    // Storage Management
+    function saveFormState() {
+      const inputs = document.querySelectorAll('#footprintForm input, #footprintForm select, #gridFactor, #householdSize, #reductionPledge');
+      const state = {};
+      inputs.forEach(input => {
+        state[input.id] = input.type === 'checkbox' ? input.checked : input.value;
+      });
+      localStorage.setItem('ecoPulseProState', JSON.stringify(state));
+    }
+
+    function loadFormState() {
+      const saved = localStorage.getItem('ecoPulseProState');
+      if (!saved) return;
+      const state = JSON.parse(saved);
+      Object.keys(state).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (el.type === 'checkbox') el.checked = state[id];
+          else el.value = state[id];
+        }
+      });
+    }
+
+    function resetData() {
+      localStorage.removeItem('ecoPulseProState');
+      document.getElementById('footprintForm').reset();
+      document.getElementById('electricity').value = 200;
+      document.getElementById('carKm').value = 100;
+      document.getElementById('reductionPledge').value = 0;
+      recalculate();
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFormState();
+      recalculate();
+    });
+  </script>
+</body>
+</html>
